@@ -44,3 +44,27 @@ zstyle ':zce:*' bg 'fg=7'
 zstyle ':zce:*' prompt-char '%{\e[1;32m%}Character:%{\e[0m%} '
 zstyle ':zce:*' prompt-key '%{\e[1;32m%}Key:%{\e[0m%} '
 ----
+
+Notes
+-----
+
+Optionally you can use the zcompiled file with the autoloading for a little faster loading on every shell start up, if you zcompile the necessary functions.
+zcompile `zce.zsh` to `~/.zsh/zfunc/zce`:
+
+----
+% Z=~/c/experiment/zsh/zce.zsh/zce.zsh; ($SHELL -c ". $Z && zce-zcompile $Z ~/.zsh/zfunc")
+** zcompiling zce in ~/.zsh/zfunc for a little faster startups...
++ mkdir -p ~/.zsh/zfunc
+* writing code ~/.zsh/zfunc/zce
+* re-compiling ~/.zsh/zfunc/zce.zwc: succeeded
+** All done.
+** Please update your .zshrc to load the zcompiled file like this,
+-- >8 --
+## zce.zsh stuff.
+# source ~/c/experiment/zsh/zce.zsh/zce.zsh
+autaload -w ~/.zsh/zfunc/zce; zle -N zce
+# bindkey "^Xz" zce
+-- 8< --
+----
+
+Please copy and paste the contents between `-- >8 --` and `-- 8< --`  into your `~/.zshrc`
