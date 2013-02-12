@@ -15,6 +15,9 @@ Please source it and bind the function to your favorite key.
 Styles
 ------
 
+`:zce:* keys`:: Keys to be used for target characters. +
+(default: the result of `setopt braceccl; ${(j..)$(print {a-z} {A-Z})}`)
+
 `:zce:* fg`:: A highlight sepc for target characters. +
 (default: `'fg=196,bold'`)
 
@@ -32,6 +35,10 @@ customization example
 
 [source,zsh]
 ----
+() {
+  setopt localoptions braceccl
+  zstyle ':zce:*' keys ${(j..)$(print {a-z})}
+}
 zstyle ':zce:*' fg 'fg=white,bold'
 zstyle ':zce:*' bg 'fg=7'
 zstyle ':zce:*' prompt-char '%{\e[1;32m%}Character:%{\e[0m%} '
