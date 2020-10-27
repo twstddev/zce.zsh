@@ -61,7 +61,7 @@ zce-1 () {
   local b="$1"; shift
   local kont="$1"; shift
   local keys="$1"; shift
-  [[ "$c" == [[:print:]] ]] || return -1
+  [[ "$c" =~ ^[[:print:]]{2}$ ]] || return -1
   local -a ps
   local -a match mbegin mend
   local null=$'\0' ok=$'\e\e ' okp=$'\e\e [[:digit:]]##(#e)'
@@ -107,7 +107,8 @@ zce-2-raw () {
   local -i n=1
   local null=$'\0'
   local MATCH MBEGIN MEND
-  ${keyinfun} '' "$b" "${b//(#m)${c}/${ks[i--][1]}}" \
+
+  ${keyinfun} '' "$b" "${b//(#m)${c}/${ks[i--][1]}${c[2,${#c}]}}" \
     "${movecfun}" "${keyinfun}" "${kreadfun}" \
     -- ${(s. .)${:-"${oks//(#m)$'\t'/$null$ps[((n++))] }$null$ps[n]"}}
 }
@@ -122,7 +123,7 @@ zce-move-cursor () {
 }
 
 zce-readc () {
-  if [[ "${3-}" == "t" ]] &&
+  if [[ "${4-}" == "t" ]] &&
     {[[ -z "${POSTDISPLAY-}" ]] || [[ "${POSTDISPLAY-}" != *"\n"* ]]}; then
     echoti cud1
     echoti cuu1
@@ -133,7 +134,7 @@ zce-readc () {
   echoti hpa 0 2>/dev/null || echo -n '\x1b[1G'
   echoti el
   print -Pn $2
-  read -s -k 1 $1
+  read -s -k $3 $1
   local ret=$?
   echoti hpa 0 2>/dev/null || echo -n '\x1b[1G'
   echoti el
@@ -144,7 +145,7 @@ zce-readc () {
 zce-keyin-read () {
   local s=; zstyle -s ':zce:*' prompt-key s || \
     s='%{\e[1;32m%}Target key:%{\e[0m%} '
-  zce-readc "$1" "$s"
+  zce-readc "$1" "$s" 1
 }
 
 zce-keyin-loop () {
@@ -217,12 +218,12 @@ with-zce () {
 zce-searchin-read () {
   local s=; zstyle -s ':zce:*' prompt-char s || \
     s='%{\e[1;32m%}Search for character:%{\e[0m%} '
-  zce-readc "$1" "$s" t
+  zce-readc "$1" "$s" 2 t
 }
 
 zce-raw () {
   local c=; "$1" c
-  [[ "$c" == [[:print:]] ]] && {
+  [[ "$c" =~ ^[[:print:]]{2}$ ]] && {
     zce-1 "$c" "$BUFFER" zce-2 "$2"
   }
 }
