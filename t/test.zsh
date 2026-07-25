@@ -50,6 +50,174 @@ test-zce-1-fail () {
   }
 }
 
+test-zce-1-case () {
+  () {
+    local t; for t in "$@"; do
+      {
+        zstyle -d ':zce:*' search-case
+        "$t"
+      } always {
+        zstyle -d ':zce:*' search-case
+      }
+    done
+  } \
+  test-zce-1-case--ignorecase-fail \
+  test-zce-1-case--ignorecase-succ \
+  test-zce-1-case--smartcase-fail \
+  test-zce-1-case--smartcase-succ \
+  test-zce-1-case--default-fail \
+  test-zce-1-case--default-succ
+}
+
+test-zce-1-case--ignorecase-fail () {
+  zstyle ':zce:*' search-case ignorecase
+  {
+    local failcalledp=nil
+    zce-fail () { failcalledp=t }
+    K () {}
+    zce-1-call "b" "cC" K "ab"
+    local r=$?
+    is '(($r != 0))'
+    is '[[ $failcalledp == t ]]'
+  } always {
+    . ../zce.zsh
+  }
+}
+
+test-zce-1-case--ignorecase-succ () {
+  zstyle ':zce:*' search-case ignorecase
+  () {
+    local succcalledp=nil
+    K () { succcalledp=t }
+    zce-1-call "b" "bb" K "ab"
+    local r=$?
+    is '(($r == 0))'
+    is '[[ $succcalledp == t ]]'
+  }
+  () {
+    local succcalledp=nil
+    K () { succcalledp=t }
+    zce-1-call "B" "bb" K "ab"
+    local r=$?
+    is '(($r == 0))'
+    is '[[ $succcalledp == t ]]'
+  }
+  () {
+    local succcalledp=nil
+    K () { succcalledp=t }
+    zce-1-call "b" "BB" K "ab"
+    local r=$?
+    is '(($r == 0))'
+    is '[[ $succcalledp == t ]]'
+  }
+  () {
+    local succcalledp=nil
+    K () { succcalledp=t }
+    zce-1-call "B" "BB" K "ab"
+    local r=$?
+    is '(($r == 0))'
+    is '[[ $succcalledp == t ]]'
+  }
+}
+
+test-zce-1-case--smartcase-fail () {
+  zstyle ':zce:*' search-case smartcase
+  () {
+    {
+      local failcalledp=nil
+      zce-fail () { failcalledp=t }
+      K () {}
+      zce-1-call "b" "cC" K "ab"
+      local r=$?
+      is '(($r != 0))'
+      is '[[ $failcalledp == t ]]'
+    } always {
+      . ../zce.zsh
+    }
+  }
+  () {
+    {
+      local failcalledp=nil
+      zce-fail () { failcalledp=t }
+      K () {}
+      zce-1-call "B" "bb" K "ab"
+      local r=$?
+      is '(($r != 0))'
+      is '[[ $failcalledp == t ]]'
+    } always {
+      . ../zce.zsh
+    }
+  }
+}
+
+test-zce-1-case--smartcase-succ () {
+  zstyle ':zce:*' search-case smartcase
+  () {
+    local succcalledp=nil
+    K () { succcalledp=t }
+    zce-1-call "b" "bb" K "ab"
+    local r=$?
+    is '(($r == 0))'
+    is '[[ $succcalledp == t ]]'
+  }
+  () {
+    local succcalledp=nil
+    K () { succcalledp=t }
+    zce-1-call "b" "BB" K "ab"
+    local r=$?
+    is '(($r == 0))'
+    is '[[ $succcalledp == t ]]'
+  }
+  () {
+    local succcalledp=nil
+    K () { succcalledp=t }
+    zce-1-call "B" "BB" K "ab"
+    local r=$?
+    is '(($r == 0))'
+    is '[[ $succcalledp == t ]]'
+  }
+  () {
+    local succcalledp=nil
+    K () { succcalledp=t }
+    zce-1-call "ab" "aBAbAB" K "ab"
+    local r=$?
+    is '(($r == 0))'
+    is '[[ $succcalledp == t ]]'
+  }
+  () {
+    local failcalledp=nil
+    zce-fail () { failcalledp=t }
+    K () {}
+    zce-1-call "aB" "ab" K "ab"
+    local r=$?
+    is '(($r != 0))'
+    is '[[ $failcalledp == t ]]'
+  }
+}
+
+test-zce-1-case--default-fail () {
+  {
+    local failcalledp=nil
+    zce-fail () { failcalledp=t }
+    K () {}
+    zce-1-call "b" "BB" K "ab"
+    local r=$?
+    is '(($r != 0))'
+    is '[[ $failcalledp == t ]]'
+  } always {
+    . ../zce.zsh
+  }
+}
+
+test-zce-1-case--default-succ () {
+  local succcalledp=nil
+  K () { succcalledp=t }
+  zce-1-call "b" "bb" K "ab"
+  local r=$?
+  is '(($r == 0))'
+  is '[[ $succcalledp == t ]]'
+}
+
 test-zce-2-raw () {
   () {
     local tbuffer= tcalledp=
@@ -60,6 +228,14 @@ test-zce-2-raw () {
       zce-move-cursor T R
     is '[[ "$tcalledp" == t ]]'
     is '[[ "$tbuffer" == AAABBBCCC ]]'
+  }
+  () {
+    local tbuffer=
+    T () { tbuffer="$3" }
+    R () { }
+    zce-2-raw '[aA][bB]' 'aBxxAb' $'B\tA' '1 5' \
+      zce-move-cursor T R
+    is '[[ "$tbuffer" == ABxxBb ]]'
   }
   {
     local tcursur=0 local tcalledp=nil
@@ -95,4 +271,4 @@ test-keyin-loop () {
   }
 }
 
-test-run test-zce-genh-loop test-zce-1-fail test-zce-2-raw test-keyin-loop
+test-run test-zce-genh-loop test-zce-1-fail test-zce-1-case test-zce-2-raw test-keyin-loop
